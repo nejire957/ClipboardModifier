@@ -17,10 +17,6 @@ import androidx.activity.result.contract.ActivityResultContracts.StartActivityFo
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
-    companion object {
-        /** ID for the runtime permission dialog */
-        private const val OVERLAY_PERMISSION_REQUEST_CODE = 1
-    }
 
     override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
@@ -30,24 +26,17 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
-        requestOverlayPermission()
-
-        binding.button.setOnClickListener {
-            if(isOverlayOn) startOverlay()
-            else stopOverlay()
-        }
-
-        binding.button2.setOnClickListener{
+        binding.button.setOnClickListener{
             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             val clippedText = clipboard?.primaryClip?.getItemAt(0)?.text?.toString().orEmpty()
             val modifiedText = clippedText.replace(Regex("\r\n|\n"), " ")
             val clipItem = ClipData.newPlainText("modified text", modifiedText)
             clipboard?.setPrimaryClip(clipItem)
+            binding.textView.text = modifiedText
         }
 
         //val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         //clipboard.addPrimaryClipChangedListener(MyOnPrimaryClipChangedListener(clipboard))
-
     }
 
     var isOverlayOn = false
@@ -61,7 +50,9 @@ class MainActivity : AppCompatActivity() {
         isOverlayOn = false
     }
 
-    /** Requests an overlay permission to the user if needed. */
+    companion object {
+        private const val OVERLAY_PERMISSION_REQUEST_CODE = 1
+    }
     private fun requestOverlayPermission() {
         if (isOverlayGranted()) return
         val intent = Intent(
@@ -79,10 +70,9 @@ class MainActivity : AppCompatActivity() {
         startForResult.launch(intent)
     }
 
-    /** Checks if the overlay is permitted. */
-    private fun isOverlayGranted() =
-        Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
-
+    private fun isOverlayGranted(): Boolean {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.M || Settings.canDrawOverlays(this)
+    }
 }
 
 class MyOnPrimaryClipChangedListener(val clipboard: ClipboardManager): ClipboardManager.OnPrimaryClipChangedListener{
